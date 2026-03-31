@@ -3,11 +3,7 @@ import '../../data/datasources/ollama_api_service.dart';
 import '../../data/repositories/ollama_repository.dart';
 import '../../data/storage/local_storage_service.dart';
 import '../../models/ollama_model.dart';
-
-/// Provider for local storage service
-final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
-  return LocalStorageService();
-});
+import 'settings_providers.dart';
 
 /// Provider for the Ollama API service
 final ollamaApiServiceProvider = Provider<OllamaApiService>((ref) {

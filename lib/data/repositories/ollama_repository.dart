@@ -56,6 +56,20 @@ class OllamaRepository {
     return url != null && url.isNotEmpty;
   }
 
+  /// Send a chat message (non-streaming)
+  Future<String> chat({
+    required String model,
+    required List<Map<String, String>> messages,
+    double? temperature,
+  }) async {
+    final result = await _apiService.chat(
+      model: model,
+      messages: messages,
+      temperature: temperature,
+    );
+    return result['message']?['content'] ?? '';
+  }
+
   /// Initialize API with saved URL
   Future<void> initializeFromStorage() async {
     final url = await getServerUrl();
