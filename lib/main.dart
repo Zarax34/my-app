@@ -2,36 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'presentation/providers/settings_providers.dart';
 import 'presentation/providers/ollama_providers.dart';
-import 'presentation/providers/chat_providers.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/connection_screen.dart';
 import 'presentation/screens/chat_screen.dart';
-import 'data/storage/local_storage_service.dart';
-import 'data/storage/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize local storage
-  final localStorage = LocalStorageService();
-  await localStorage.init();
-
-  // Initialize database
-  final database = DatabaseService();
-  await database.init();
-
-  // Initialize Ollama API from saved URL
-  final ollamaRepo = OllamaRepository(
-    apiService: OllamaApiService(),
-    localStorage: localStorage,
-  );
-  await ollamaRepo.initializeFromStorage();
-
-  runApp(
-    const ProviderScope(
-      child: OllamaMobileStudioApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: OllamaMobileStudioApp()));
 }
 
 class OllamaMobileStudioApp extends ConsumerWidget {

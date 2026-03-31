@@ -4,6 +4,11 @@ import '../../data/repositories/ollama_repository.dart';
 import '../../data/storage/local_storage_service.dart';
 import '../../models/ollama_model.dart';
 
+/// Provider for local storage service
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  return LocalStorageService();
+});
+
 /// Provider for the Ollama API service
 final ollamaApiServiceProvider = Provider<OllamaApiService>((ref) {
   return OllamaApiService();
@@ -30,19 +35,15 @@ class ServerUrlNotifier extends StateNotifier<String?> {
   }
 
   Future<void> _loadServerUrl() async {
-    state = await _repository.getServerUrl();
-    if (state != null && state!.isNotEmpty) {
-      _repository.initializeFromStorage();
+    final url = await _repository.getServerUrl();
+    if (url != null && url.isNotEmpty) {
+      state = url;
     }
   }
 
   Future<void> setServerUrl(String url) async {
     state = url;
     await _repository.setServerUrl(url);
-  }
-
-  Future<bool> testConnection() async {
-    return _repository.testConnection();
   }
 }
 
@@ -70,57 +71,6 @@ class ModelsNotifier extends StateNotifier<AsyncValue<List<OllamaModel>>> {
 
   Future<void> refresh() async {
     await _loadModels();
-  }
-
-  Future<void> pullModel(String modelName) async {
-    // This is handled separately via the pullModelProvider
-  }
-}
-
-/// Provider for model pulling progress
-final pullModelProvider = StateNotifierProvider<PullModelNotifier, PullModelState>((ref) {
-  return PullModelNotifier(ref.watch(ollamaRepositoryProvider));
-});
-
-class PullModelState {
-  final bool isLoading;
-  final double? progress;
-  final String? status;
-  final String? error;
-
-  PullModelState({
-    this.isLoading = false,
-    this.progress,
-    this.status,
-    this.error,
-  });
-
-  PullModelState copyWith({
-    bool? isLoading,
-    double? progress,
-    String? status,
-    String? error,
-  }) {
-    return PullModelState(
-      isLoading: isLoading ?? this.isLoading,
-      progress: progress ?? this.progress,
-      status: status ?? this.status,
-      error: error ?? this.error,
-    );
-  }
-}
-
-class PullModelNotifier extends StateNotifier<PullModelState> {
-  final OllamaRepository _repository;
-
-  PullModelNotifier(this._repository) : super(PullModelState());
-
-  Stream<PullProgressEvent> pullModel(String modelName) {
-    return _repository.pullModel(modelName);
-  }
-
-  void reset() {
-    state = PullModelState();
   }
 }
 

@@ -58,7 +58,7 @@ class AppTheme {
         ),
         iconTheme: IconThemeData(color: darkOnBackground),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -98,7 +98,7 @@ class AppTheme {
         backgroundColor: darkPrimary,
         foregroundColor: Colors.white,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: darkSurface,
         titleTextStyle: const TextStyle(
           color: darkOnBackground,
@@ -169,7 +169,7 @@ class AppTheme {
         ),
         iconTheme: IconThemeData(color: lightOnBackground),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: lightSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -209,7 +209,7 @@ class AppTheme {
         backgroundColor: lightPrimary,
         foregroundColor: Colors.white,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: lightSurface,
         titleTextStyle: const TextStyle(
           color: lightOnBackground,
