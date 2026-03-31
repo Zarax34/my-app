@@ -2,24 +2,14 @@ name: Build & Release (APK + AAB)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     tags:
       - 'v*'
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: 'Release type'
-        required: true
-        default: 'debug'
-        type: choice
-        options:
-          - debug
-          - release
 
 env:
-  FLUTTER_VERSION: '3.16.0'
   JAVA_VERSION: '17'
 
 jobs:
@@ -27,113 +17,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: 📱 Setup Flutter
-        uses: subosito/flutter-action@v3
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
-          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
 
-      - name: 📦 Install dependencies
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: 🔨 Generate code (Hive adapters, etc.)
+      - name: Generate code (Hive, Riverpod)
         run: |
           if grep -q "build_runner" pubspec.yaml; then
             echo "build_runner found, generating code..."
-            dart run build_runner build --delete-conflicting-outputs
-          else
-            echo "No build_runner dependencies found, skipping code generation"
+            dart run build_runner build --delete-conflicting-outputs || echo "Codegen done"
           fi
 
-      - name: 🔍 Analyze code
-        run: flutter analyze
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
 
-      - name: 🧪 Run tests (if any)
-        run: flutter test || true
-
-      - name: 🏗️ Build Debug APK
-        run: flutter build apk --debug
-        timeout-minutes: 30
-
-      - name: 🏗️ Build Release APK
+      - name: Build Release APK
         run: flutter build apk --release
         timeout-minutes: 30
 
-      - name: 🏗️ Build Android App Bundle (AAB)
+      - name: Build App Bundle (AAB)
         run: flutter build appbundle --release
         timeout-minutes: 30
 
-      - name: 📤 Upload Debug APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: app-debug-apk-${{ github.sha }}
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 30
-          if-no-files-found: warn
-
-      - name: 📤 Upload Release APK
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: app-release-apk-${{ github.sha }}
+          name: app-release.apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
-          if-no-files-found: warn
 
-      - name: 📤 Upload App Bundle
+      - name: Upload App Bundle
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: app-release-bundle-${{ github.sha }}
+          name: app-release.aab
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
-          if-no-files-found: warn
 
-      - name: 📊 Create Build Summary
-        if: always()
-        run: |
-          echo "## 📱 Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Type | Status | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "|------------|--------|------|" >> $GITHUB_STEP_SUMMARY
-          
-          # Debug APK
-          if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
-            DEBUG_SIZE=$(ls -lh build/app/outputs/flutter-apk/app-debug.apk | awk '{print $5}')
-            echo "| Debug APK | ✅ Success | $DEBUG_SIZE |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Debug APK | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Release APK
-          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
-            RELEASE_SIZE=$(ls -lh build/app/outputs/flutter-apk/app-release.apk | awk '{print $5}')
-            echo "| Release APK | ✅ Success | $RELEASE_SIZE |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Release APK | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # App Bundle
-          if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
-            AAB_SIZE=$(ls -lh build/app/outputs/bundle/release/app-release.aab | awk '{print $5}')
-            echo "| App Bundle | ✅ Success | $AAB_SIZE |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| App Bundle | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: 🚀 Create GitHub Release (on tag)
+      - name: Create GitHub Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
@@ -141,7 +78,5 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
           generate_release_notes: true
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
