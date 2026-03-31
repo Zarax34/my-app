@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../providers/ollama_providers.dart';
 import 'chat_screen.dart';
 
@@ -70,7 +70,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
               // Logo
               Text(
                 'ollama',
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -1,
@@ -79,7 +79,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
               const SizedBox(height: 8),
               Text(
                 'Connect to your Ollama server',
-                style: GoogleFonts.inter(fontSize: 14, color: mutedCol),
+                style: TextStyle(fontSize: 14, color: mutedCol),
               ),
               const SizedBox(height: 40),
 
@@ -114,7 +114,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
                 const SizedBox(height: 16),
                 Text(
                   _status!,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: 13,
                     color: _status!.startsWith('Error') ? Colors.red : Colors.green,
                   ),

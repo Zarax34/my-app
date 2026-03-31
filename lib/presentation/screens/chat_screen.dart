@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../providers/ollama_providers.dart';
 import '../providers/chat_providers.dart';
 import '../theme/app_theme.dart';
@@ -76,7 +76,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(serverUrl ?? 'Ollama', style: GoogleFonts.inter(fontSize: 14)),
+        title: Text(serverUrl ?? 'Ollama', style: TextStyle(fontSize: 14)),
         actions: [
           IconButton(
             icon: Icon(Icons.add, size: 18, color: mutedCol),
@@ -97,7 +97,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? Center(
                     child: Text(
                       'How can I help you today?',
-                      style: GoogleFonts.inter(fontSize: 18, color: mutedCol),
+                      style: TextStyle(fontSize: 18, color: mutedCol),
                     ),
                   )
                 : ListView.builder(
@@ -114,7 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           children: [
                             Text(
                               isUser ? 'You' : 'Assistant',
-                              style: GoogleFonts.inter(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: mutedCol,
@@ -123,7 +123,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             const SizedBox(height: 4),
                             SelectableText(
                               msg.content,
-                              style: GoogleFonts.inter(fontSize: 14, height: 1.6),
+                              style: TextStyle(fontSize: 14, height: 1.6),
                             ),
                           ],
                         ),
@@ -151,11 +151,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         data: (models) => DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: ref.watch(selectedModelProvider),
-            hint: Text('Select model', style: GoogleFonts.inter(fontSize: 13)),
+            hint: Text('Select model', style: TextStyle(fontSize: 13)),
             isDense: true,
             items: models.map((m) => DropdownMenuItem(
               value: m.name,
-              child: Text(m.name, style: GoogleFonts.inter(fontSize: 13)),
+              child: Text(m.name, style: TextStyle(fontSize: 13)),
             )).toList(),
             onChanged: (v) {
               if (v != null) ref.read(selectedModelProvider.notifier).setSelectedModel(v);
@@ -163,7 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
         loading: () => const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-        error: (e, _) => Text('Error loading models', style: GoogleFonts.inter(fontSize: 12, color: Colors.red)),
+        error: (e, _) => Text('Error loading models', style: TextStyle(fontSize: 12, color: Colors.red)),
       ),
     );
   }
