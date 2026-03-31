@@ -7,6 +7,7 @@ on:
       - 'v*'
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build-apk:
@@ -23,17 +24,23 @@ jobs:
           java-version: '17'
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: '3.16.0'
           channel: 'stable'
           cache: true
+          cache-key: 'flutter-${{ hashFiles('pubspec.lock') }}'
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate Hive adapters
-        run: dart run build_runner build --delete-conflicting-outputs
+      - name: Generate code (Hive adapters, etc.)
+        run: |
+          if [ -f "pubspec.lock" ] && grep -q "build_runner" pubspec.lock; then
+            dart run build_runner build --delete-conflicting-outputs
+          else
+            echo "No build_runner dependencies found, skipping code generation"
+          fi
 
       - name: Analyze code
         run: flutter analyze
@@ -44,9 +51,10 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: app-release-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+          if-no-files-found: error
 
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')

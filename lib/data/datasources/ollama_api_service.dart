@@ -69,7 +69,8 @@ class OllamaApiService {
 
   /// Initialize the API service with a base URL
   void initialize(String baseUrl) {
-    _baseUrl = baseUrl.replaceAll('/$', '');
+    // Remove trailing slash if present
+    _baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
     
     _dio = Dio(BaseOptions(
       baseUrl: _baseUrl!,

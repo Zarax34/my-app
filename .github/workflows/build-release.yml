@@ -37,18 +37,23 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: 📱 Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
-          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}'
+          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}'
 
       - name: 📦 Install dependencies
         run: flutter pub get
 
-      - name: 🔨 Generate Hive adapters
-        run: dart run build_runner build --delete-conflicting-outputs
+      - name: 🔨 Generate code (Hive adapters, etc.)
+        run: |
+          if [ -f "pubspec.lock" ] && grep -q "build_runner" pubspec.lock; then
+            dart run build_runner build --delete-conflicting-outputs
+          else
+            echo "No build_runner dependencies found, skipping code generation"
+          fi
 
       - name: 🔍 Analyze code
         run: flutter analyze
@@ -58,44 +63,74 @@ jobs:
 
       - name: 🏗️ Build Debug APK
         run: flutter build apk --debug
+        timeout-minutes: 30
 
       - name: 🏗️ Build Release APK
         run: flutter build apk --release
+        timeout-minutes: 30
 
       - name: 🏗️ Build Android App Bundle (AAB)
         run: flutter build appbundle --release
+        timeout-minutes: 30
 
       - name: 📤 Upload Debug APK
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: app-debug-apk
+          name: app-debug-apk-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
+          if-no-files-found: warn
 
       - name: 📤 Upload Release APK
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: app-release-apk
+          name: app-release-apk-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+          if-no-files-found: warn
 
       - name: 📤 Upload App Bundle
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: app-release-bundle
+          name: app-release-bundle-${{ github.sha }}
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
+          if-no-files-found: warn
 
-      - name: 📊 Create Release Summary
+      - name: 📊 Create Build Summary
         if: always()
         run: |
           echo "## 📱 Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Build Type | Status | Size |" >> $GITHUB_STEP_SUMMARY
           echo "|------------|--------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Debug APK | ✅ Success | $(ls -lh build/app/outputs/flutter-apk/app-debug.apk | awk '{print $5}') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Release APK | ✅ Success | $(ls -lh build/app/outputs/flutter-apk/app-release.apk | awk '{print $5}') |" >> $GITHUB_STEP_SUMMARY
-          echo "| App Bundle | ✅ Success | $(ls -lh build/app/outputs/bundle/release/app-release.aab | awk '{print $5}') |" >> $GITHUB_STEP_SUMMARY
+          
+          # Debug APK
+          if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+            DEBUG_SIZE=$(ls -lh build/app/outputs/flutter-apk/app-debug.apk | awk '{print $5}')
+            echo "| Debug APK | ✅ Success | $DEBUG_SIZE |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Debug APK | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Release APK
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            RELEASE_SIZE=$(ls -lh build/app/outputs/flutter-apk/app-release.apk | awk '{print $5}')
+            echo "| Release APK | ✅ Success | $RELEASE_SIZE |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Release APK | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # App Bundle
+          if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
+            AAB_SIZE=$(ls -lh build/app/outputs/bundle/release/app-release.aab | awk '{print $5}')
+            echo "| App Bundle | ✅ Success | $AAB_SIZE |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| App Bundle | ❌ Failed | - |" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 🚀 Create GitHub Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
