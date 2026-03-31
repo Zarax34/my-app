@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../models/ollama_model.dart';
+import '../../domain/models/message.dart';
 import '../datasources/ollama_api_service.dart';
 import '../storage/local_storage_service.dart';
 
@@ -62,9 +63,17 @@ class OllamaRepository {
     required List<Map<String, String>> messages,
     double? temperature,
   }) async {
+    // Convert map messages to Message objects
+    final messageObjects = messages.map((m) => Message(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      role: m['role'] == 'user' ? MessageRole.user : MessageRole.assistant,
+      content: m['content'] ?? '',
+      timestamp: DateTime.now(),
+    )).toList();
+
     final result = await _apiService.chat(
       model: model,
-      messages: messages,
+      messages: messageObjects,
       temperature: temperature,
     );
     return result['message']?['content'] ?? '';
