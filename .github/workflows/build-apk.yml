@@ -3,10 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [main, master]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -32,14 +28,20 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
+      - name: Recreate Android project
+        run: |
+          rm -rf android
+          flutter create --org com.example --project-name ollama_mobile_studio --platforms android .
+          git checkout -- pubspec.yaml lib/
+
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate code (Hive adapters, Riverpod)
+      - name: Generate code (Hive, Riverpod)
         run: |
           if grep -q "build_runner" pubspec.yaml; then
-            echo "build_runner found, generating code..."
-            dart run build_runner build --delete-conflicting-outputs || echo "Codegen done or skipped"
+            echo "Generating code..."
+            dart run build_runner build --delete-conflicting-outputs || echo "Codegen done"
           fi
 
       - name: Accept Android licenses
@@ -54,14 +56,3 @@ jobs:
           name: app-release.apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
-
-      - name: Create Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
-        with:
-          name: "Build ${{ github.run_number }}"
-          tag_name: "build-${{ github.run_number }}"
-          files: build/app/outputs/flutter-apk/app-release.apk
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

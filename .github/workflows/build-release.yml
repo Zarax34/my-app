@@ -5,12 +5,7 @@ on:
     branches: [main, master]
     tags:
       - 'v*'
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
-
-env:
-  JAVA_VERSION: '17'
 
 jobs:
   build:
@@ -24,7 +19,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -35,13 +30,19 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
+      - name: Recreate Android project
+        run: |
+          rm -rf android
+          flutter create --org com.example --project-name ollama_mobile_studio --platforms android .
+          git checkout -- pubspec.yaml lib/
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Generate code (Hive, Riverpod)
         run: |
           if grep -q "build_runner" pubspec.yaml; then
-            echo "build_runner found, generating code..."
+            echo "Generating code..."
             dart run build_runner build --delete-conflicting-outputs || echo "Codegen done"
           fi
 
