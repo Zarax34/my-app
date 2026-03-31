@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../models/ollama_model.dart';
-import '../../data/datasources/ollama_api_service.dart';
-import '../../data/storage/local_storage_service.dart';
+import '../../models/ollama_model.dart';
+import '../datasources/ollama_api_service.dart';
+import '../storage/local_storage_service.dart';
 
 /// Repository for managing Ollama server connection and models
 class OllamaRepository {

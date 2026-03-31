@@ -1,6 +1,6 @@
-import '../domain/models/conversation.dart';
-import '../domain/models/message.dart';
-import '../data/storage/database_service.dart';
+import '../../domain/models/conversation.dart';
+import '../../domain/models/message.dart';
+import '../storage/database_service.dart';
 
 /// Repository for managing conversations and messages locally
 class ConversationRepository {
